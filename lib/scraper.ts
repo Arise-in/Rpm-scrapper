@@ -191,7 +191,22 @@ function normalizeAssetUrl(value: unknown): string | null {
   const trimmed = value.trim();
 
   if (/^https?:\/\//i.test(trimmed)) {
-    return trimmed.replace(/^https?:\/\/[^/]+\.streamvault\.net\/v4/i, RPMPLAY_ASSET_ORIGIN);
+    const normalized = trimmed.replace(
+      /^https?:\/\/[^/]+\.streamvault\.net\/v4/i,
+      RPMPLAY_ASSET_ORIGIN,
+    );
+
+    try {
+      const url = new URL(normalized);
+      const isIpv4 = /^(?:\d{1,3}\.){3}\d{1,3}$/.test(url.hostname);
+      const isIpv6 = /^[0-9a-f:]+$/i.test(url.hostname) && url.hostname.includes(":");
+      if (isIpv4 || isIpv6) {
+        return new URL(`${url.pathname}${url.search}${url.hash}`, `${RPMPLAY_ASSET_ORIGIN}/`).href;
+      }
+      return url.href;
+    } catch {
+      return null;
+    }
   }
 
   try {
@@ -513,11 +528,18 @@ export async function scrapeRpmVideo(code: string, baseUrl = ""): Promise<Scrape
     throw new Error("Could not fetch the decrypted master playlist URL (network error)");
   }
   if (!masterResponse.ok) {
+    const masterHost = (() => {
+      try {
+        return new URL(masterUrl).host;
+      } catch {
+        return "unknown";
+      }
+    })();
     const snippet = await masterResponse.text().catch(() => "");
     const trimmed = snippet.trim();
     const hint = trimmed ? ` Response: ${trimmed.slice(0, 120)}` : "";
     throw new Error(
-      `Could not fetch the decrypted master playlist URL (status ${masterResponse.status}).${hint}`,
+      `Could not fetch the decrypted master playlist URL (status ${masterResponse.status}). Host: ${masterHost}.${hint}`,
     );
   }
 
