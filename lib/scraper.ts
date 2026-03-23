@@ -127,10 +127,11 @@ async function decryptPayload(hexData: string): Promise<string> {
     ["decrypt"],
   );
 
+  const payload = hexToArrayBuffer(hexData);
   const decrypted = await crypto.subtle.decrypt(
     { name: "AES-CBC", iv: AES_IV_BYTES },
     key,
-    hexToArrayBuffer(hexData),
+    new Uint8Array(payload),
   );
 
   return new TextDecoder().decode(decrypted);
