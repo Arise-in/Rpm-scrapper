@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { scrapeRpmVideo } from "../../../lib/scraper";
 
+type RouteParams = Record<string, string | string[] | undefined>;
+type CodeRouteHandlerContext = {
+  params: Promise<RouteParams>;
+};
+
 export const config = {
   api: {
     responseLimit: "8mb",
@@ -9,9 +14,11 @@ export const config = {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { code: string } }
+  context: CodeRouteHandlerContext
 ) {
-  const code = params.code;
+  const params = (await context.params) ?? {};
+  const rawCode = params.code;
+  const code = Array.isArray(rawCode) ? rawCode[0] : rawCode;
 
   if (!code) {
     return NextResponse.json({ error: "Code is required" }, { status: 400 });
@@ -43,7 +50,10 @@ export async function GET(
   }
 }
 
-export async function OPTIONS() {
+export async function OPTIONS(
+  _request: NextRequest,
+  _context: CodeRouteHandlerContext
+) {
   return NextResponse.json({}, {
     headers: {
       "Access-Control-Allow-Origin": "*",
