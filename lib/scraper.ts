@@ -1,5 +1,3 @@
-import crypto from "crypto";
-
 export interface Quality {
   resolution?: string;
   bandwidth?: number;
@@ -59,11 +57,11 @@ const COMMON_HEADERS: Record<string, string> = {
   "Accept-Language": "en-US,en;q=0.9",
 };
 
-const AES_KEY_BYTES = Buffer.from([
+const AES_KEY_BYTES = new Uint8Array([
   0x6b, 0x69, 0x65, 0x6d, 0x74, 0x69, 0x65, 0x6e, 0x6d, 0x75, 0x61, 0x39, 0x31,
   0x31, 0x63, 0x61,
 ]);
-const AES_IV_BYTES = Buffer.from([
+const AES_IV_BYTES = new Uint8Array([
   0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30, 0x6f, 0x69, 0x75,
   0x79, 0x74, 0x72,
 ]);
@@ -108,6 +106,36 @@ async function headOk(url: string): Promise<boolean> {
   }
 }
 
+function hexToArrayBuffer(hex: string): ArrayBuffer {
+  if (hex.length % 2 !== 0) {
+    throw new Error("Invalid hex string length");
+  }
+  const buffer = new ArrayBuffer(hex.length / 2);
+  const view = new Uint8Array(buffer);
+  for (let i = 0; i < view.length; i += 1) {
+    view[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  }
+  return buffer;
+}
+
+async function decryptPayload(hexData: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    AES_KEY_BYTES,
+    "AES-CBC",
+    false,
+    ["decrypt"],
+  );
+
+  const decrypted = await crypto.subtle.decrypt(
+    { name: "AES-CBC", iv: AES_IV_BYTES },
+    key,
+    hexToArrayBuffer(hexData),
+  );
+
+  return new TextDecoder().decode(decrypted);
+}
+
 async function getDecryptedVideoData(code: string): Promise<Record<string, any>> {
   const response = await safeFetch(
     `${RPMPLAY_ASSET_ORIGIN}/api/v1/video?id=${code}&w=1920&h=1080&r=`,
@@ -122,11 +150,8 @@ async function getDecryptedVideoData(code: string): Promise<Record<string, any>>
     throw new Error(`Invalid API response format: ${hexData.slice(0, 100)}`);
   }
 
-  const decipher = crypto.createDecipheriv("aes-128-cbc", AES_KEY_BYTES, AES_IV_BYTES);
-  let decrypted = decipher.update(Buffer.from(hexData, "hex"));
-  decrypted = Buffer.concat([decrypted, decipher.final()]);
-
-  return JSON.parse(decrypted.toString("utf8"));
+  const decryptedText = await decryptPayload(hexData);
+  return JSON.parse(decryptedText);
 }
 
 function buildProxyUrl(url: string | null, baseUrl: string): string | null {
