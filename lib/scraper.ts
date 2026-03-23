@@ -455,7 +455,7 @@ export async function scrapeRpmVideo(code: string, baseUrl = ""): Promise<Scrape
     throw new Error(`Failed to decrypt video data: ${error.message}`);
   }
 
-  const masterUrl = videoData.source;
+  const masterUrl = normalizeAssetUrl(videoData.source);
   if (!masterUrl) {
     throw new Error("No source URL found in decrypted API response");
   }
