@@ -46,7 +46,7 @@ export interface ScraperResult {
   };
 }
 
-const RPMPLAY_ASSET_ORIGIN = "https://anime.rpmplay.me";
+const RPMPLAY_ASSET_ORIGIN = "https://aniflix.rpmvid.com";
 
 const COMMON_HEADERS: Record<string, string> = {
   "User-Agent":

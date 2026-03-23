@@ -6,13 +6,13 @@ const codes = ["mowvvd", "fd9aaz", "ox899d", "dn6pif", "hen9zx", "zbiokz"];
 
 const HEADERS = {
   "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-  "Referer": "https://anime.rpmplay.me/",
-  "Origin": "https://anime.rpmplay.me",
+  "Referer": "https://aniflix.rpmvid.com/",
+  "Origin": "https://aniflix.rpmvid.com",
 };
 
 // Try fetching the JS bundle to find CDN patterns
 async function findJsBundleCdns() {
-  const pageRes = await fetch("https://anime.rpmplay.me/mowvvd", { headers: HEADERS });
+  const pageRes = await fetch("https://aniflix.rpmvid.com/mowvvd", { headers: HEADERS });
   const html = await pageRes.text();
   
   // Get JS src links
@@ -25,7 +25,7 @@ async function findJsBundleCdns() {
   
   // Fetch the main app bundle
   for (const src of jsSrcs.slice(0, 5)) {
-    const jsUrl = src.startsWith("http") ? src : `https://anime.rpmplay.me${src}`;
+    const jsUrl = src.startsWith("http") ? src : `https://aniflix.rpmvid.com${src}`;
     console.log(`\nFetching JS: ${jsUrl.substring(0, 80)}`);
     try {
       const jsRes = await fetch(jsUrl, { headers: HEADERS });
