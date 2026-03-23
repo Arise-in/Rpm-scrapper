@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { scrapeRpmVideo } from "../../../lib/scraper";
 
+export const runtime = "edge";
+
 type RouteParams = Record<string, string | string[] | undefined>;
 type CodeRouteHandlerContext = {
   params: Promise<RouteParams>;
