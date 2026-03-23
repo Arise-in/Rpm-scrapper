@@ -88,6 +88,32 @@ async function safeFetch(url: string, options: RequestInit = {}): Promise<Respon
   }
 }
 
+async function fetchWithStatus(
+  url: string,
+  options: RequestInit = {},
+  timeoutMs = 8000,
+): Promise<Response | null> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...COMMON_HEADERS,
+        ...((options.headers as Record<string, string> | undefined) ?? {}),
+      },
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+    return response;
+  } catch {
+    clearTimeout(timeout);
+    return null;
+  }
+}
+
 async function headOk(url: string): Promise<boolean> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 4000);
@@ -482,9 +508,17 @@ export async function scrapeRpmVideo(code: string, baseUrl = ""): Promise<Scrape
   result.masterPlaylist = masterUrl;
   result.masterPlaylistProxy = buildProxyUrl(masterUrl, baseUrl);
 
-  const masterResponse = await safeFetch(masterUrl);
+  const masterResponse = await fetchWithStatus(masterUrl);
   if (!masterResponse) {
-    throw new Error("Could not fetch the decrypted master playlist URL");
+    throw new Error("Could not fetch the decrypted master playlist URL (network error)");
+  }
+  if (!masterResponse.ok) {
+    const snippet = await masterResponse.text().catch(() => "");
+    const trimmed = snippet.trim();
+    const hint = trimmed ? ` Response: ${trimmed.slice(0, 120)}` : "";
+    throw new Error(
+      `Could not fetch the decrypted master playlist URL (status ${masterResponse.status}).${hint}`,
+    );
   }
 
   const masterContent = await masterResponse.text();
