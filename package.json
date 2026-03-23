@@ -1,0 +1,36 @@
+{
+  "name": "rpmshare-scraper",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "pages:build": "npx @cloudflare/next-on-pages",
+    "pages:deploy": "npm run pages:build && wrangler pages deploy .vercel/output/static",
+    "pages:dev": "npx wrangler pages dev .vercel/output/static --compatibility-date=2024-09-23 --compatibility-flags=nodejs_compat"
+  },
+  "dependencies": {
+    "@vidstack/react": "^1.11.30",
+    "hls.js": "^1.5.8",
+    "jsdom": "^29.0.1",
+    "lucide-react": "^0.577.0",
+    "next": "14.2.14",
+    "playwright": "^1.58.2",
+    "react": "^18",
+    "react-dom": "^18",
+    "vidstack": "^1.11.30"
+  },
+  "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.11.0",
+    "@tailwindcss/postcss": "^4.2.2",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^5",
+    "wrangler": "^3.50.0"
+  }
+}
